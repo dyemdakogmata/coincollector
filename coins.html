@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Coin Counter Pro</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Animated background particles */
+    body::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-image: 
+        radial-gradient(circle at 20% 80%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
+        radial-gradient(circle at 80% 20%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
+        radial-gradient(circle at 40% 40%, rgba(255, 255, 255, 0.05) 0%, transparent 50%);
+      animation: float 20s ease-in-out infinite;
+      pointer-events: none;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0px) rotate(0deg); }
+      50% { transform: translateY(-20px) rotate(5deg); }
+    }
+
+    .container {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(20px);
+      border-radius: 30px;
+      padding: 60px 80px;
+      box-shadow: 
+        0 20px 40px rgba(0, 0, 0, 0.1),
+        0 0 0 1px rgba(255, 255, 255, 0.2);
+      text-align: center;
+      position: relative;
+      z-index: 1;
+      max-width: 500px;
+      width: 90%;
+      transform: translateY(0);
+      animation: slideIn 0.8s ease-out;
+    }
+
+    @keyframes slideIn {
+      0% {
+        opacity: 0;
+        transform: translateY(50px);
+      }
+      100% {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    h1 {
+      color: #2c3e50;
+      font-size: 2.5rem;
+      font-weight: 700;
+      margin-bottom: 10px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      text-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .subtitle {
+      color: #7f8c8d;
+      font-size: 1.1rem;
+      margin-bottom: 40px;
+      font-weight: 300;
+    }
+
+    .coin-display {
+      position: relative;
+      margin: 40px 0;
+    }
+
+    .coin-icon {
+      font-size: 4rem;
+      margin-bottom: 20px;
+      animation: bounce 2s infinite;
+      display: inline-block;
+    }
+
+    @keyframes bounce {
+      0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+      40% { transform: translateY(-10px); }
+      60% { transform: translateY(-5px); }
+    }
+
+    .count {
+      font-size: 4rem;
+      font-weight: 800;
+      color: #2c3e50;
+      margin: 20px 0;
+      text-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      position: relative;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .count.updating {
+      transform: scale(1.1);
+      color: #27ae60;
+    }
+
+    .count::after {
+      content: '';
+      position: absolute;
+      bottom: -10px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 80px;
+      height: 4px;
+      background: linear-gradient(90deg, #667eea, #764ba2);
+      border-radius: 2px;
+      opacity: 0.3;
+    }
+
+    .status-container {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 30px;
+      padding: 15px 25px;
+      border-radius: 50px;
+      transition: all 0.3s ease;
+    }
+
+    .status-container.connected {
+      background: rgba(39, 174, 96, 0.1);
+      border: 2px solid rgba(39, 174, 96, 0.2);
+    }
+
+    .status-container.connecting {
+      background: rgba(241, 196, 15, 0.1);
+      border: 2px solid rgba(241, 196, 15, 0.2);
+    }
+
+    .status-container.error {
+      background: rgba(231, 76, 60, 0.1);
+      border: 2px solid rgba(231, 76, 60, 0.2);
+    }
+
+    .status-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      transition: all 0.3s ease;
+    }
+
+    .status-dot.connected {
+      background: #27ae60;
+      box-shadow: 0 0 10px rgba(39, 174, 96, 0.5);
+      animation: pulse 2s infinite;
+    }
+
+    .status-dot.connecting {
+      background: #f1c40f;
+      animation: blink 1s infinite;
+    }
+
+    .status-dot.error {
+      background: #e74c3c;
+    }
+
+    @keyframes pulse {
+      0% { box-shadow: 0 0 10px rgba(39, 174, 96, 0.5); }
+      50% { box-shadow: 0 0 20px rgba(39, 174, 96, 0.8); }
+      100% { box-shadow: 0 0 10px rgba(39, 174, 96, 0.5); }
+    }
+
+    @keyframes blink {
+      0%, 50% { opacity: 1; }
+      51%, 100% { opacity: 0.3; }
+    }
+
+    .status-text {
+      font-size: 1rem;
+      font-weight: 500;
+      color: #34495e;
+    }
+
+    .last-update {
+      margin-top: 20px;
+      font-size: 0.9rem;
+      color: #7f8c8d;
+      font-style: italic;
+    }
+
+    /* Responsive design */
+    @media (max-width: 768px) {
+      .container {
+        padding: 40px 30px;
+        margin: 20px;
+      }
+      
+      h1 {
+        font-size: 2rem;
+      }
+      
+      .count {
+        font-size: 3rem;
+      }
+      
+      .coin-icon {
+        font-size: 3rem;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .container {
+        padding: 30px 20px;
+      }
+      
+      h1 {
+        font-size: 1.8rem;
+      }
+      
+      .count {
+        font-size: 2.5rem;
+      }
+    }
+
+    /* Loading animation */
+    .loading {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 2px solid #f3f3f3;
+      border-top: 2px solid #3498db;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-left: 10px;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>💰 Coin Counter Pro</h1>
+    <p class="subtitle">Real-time coin counting system</p>
+    
+    <div class="coin-display">
+      <div class="coin-icon">🪙</div>
+      <div class="count" id="count">0</div>
+    </div>
+    
+    <div class="status-container connecting" id="statusContainer">
+      <div class="status-dot connecting" id="statusDot"></div>
+      <div class="status-text" id="status">Connecting to device...</div>
+    </div>
+    
+    <div class="last-update" id="lastUpdate"></div>
+  </div>
+
+  <script>
+    const ESP32_IP = "http://ESP32_IP_ADDRESS"; // <-- Change this
+    let lastCount = 0;
+    let isConnected = false;
+    
+    const countElement = document.getElementById('count');
+    const statusElement = document.getElementById('status');
+    const statusDot = document.getElementById('statusDot');
+    const statusContainer = document.getElementById('statusContainer');
+    const lastUpdateElement = document.getElementById('lastUpdate');
+
+    function updateStatus(status, message) {
+      statusContainer.className = `status-container ${status}`;
+      statusDot.className = `status-dot ${status}`;
+      statusElement.textContent = message;
+      
+      if (status === 'connected') {
+        isConnected = true;
+        lastUpdateElement.textContent = `Last updated: ${new Date().toLocaleTimeString()}`;
+      } else {
+        isConnected = false;
+      }
+    }
+
+    function animateCountChange(newCount) {
+      if (newCount !== lastCount) {
+        countElement.classList.add('updating');
+        setTimeout(() => {
+          countElement.classList.remove('updating');
+        }, 300);
+      }
+      countElement.textContent = newCount;
+      lastCount = newCount;
+    }
+
+    async function fetchCount() {
+      try {
+        const response = await fetch(`${ESP32_IP}/count`);
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
+        
+        const data = await response.text();
+        const count = parseInt(data) || 0;
+        
+        animateCountChange(count);
+        
+        if (!isConnected) {
+          updateStatus('connected', 'Connected & receiving data');
+        } else {
+          lastUpdateElement.textContent = `Last updated: ${new Date().toLocaleTimeString()}`;
+        }
+        
+      } catch (error) {
+        console.error('Fetch error:', error);
+        updateStatus('error', 'Connection failed - retrying...');
+      }
+    }
+
+    // Initial status
+    updateStatus('connecting', 'Connecting to device...');
+    
+    // Start fetching data
+    fetchCount();
+    setInterval(fetchCount, 500);
+
+    // Add some visual feedback for user interaction
+    document.addEventListener('visibilitychange', function() {
+      if (document.hidden) {
+        updateStatus('connecting', 'Reconnecting...');
+      }
+    });
+  </script>
+</body>
+</html>
